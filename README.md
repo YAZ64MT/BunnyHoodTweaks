@@ -11,6 +11,7 @@ This is a mod for Majora's Mask: Recompiled that is focused on making the bunny 
 * Allow bunny hood to be freely taken on and off while transformed
 * Allow bunny hood to be toggled on and off in the pause menu
 * Bunny ears are no longer completely stiff while standing still
+* Draws a border around bunny hood in the pause menu when enabled
 
 ### API
 This mod disables the game's default bunny hood implementation, so mods that add functionality based on the bunny hood being equipped will generally be incompatible with this mod. For these situations, an API has been provided that is intended to be used with the optional dependency system.

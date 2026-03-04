@@ -6,7 +6,7 @@
 #include "z64recomp_api.h"
 #include "overlays/actors/ovl_En_Test3/z_en_test3.h"
 
-ActorExtensionId PLAYER_EXT_BUNNY_HOOD_TWEAKS;
+static ActorExtensionId PLAYER_EXT_BUNNY_HOOD_TWEAKS;
 
 typedef struct BunnyEarKinematics {
     /* 0x0 */ Vec3s rot;
@@ -155,7 +155,7 @@ RECOMP_HOOK_RETURN("Player_UseItem") void disableBunnyMaskItemAction_on_return_P
     }
 }
 
-bool isDrawGlobalObjectsBunnyHood(PlayState *play, Player *player) {
+static bool isDrawGlobalObjectsBunnyHood(PlayState *play, Player *player) {
     if (isSpeedShouldBeAppliedToPlayer(play, player)) {
         if (player->transformation == PLAYER_FORM_HUMAN) {
             if (player->currentMask == PLAYER_MASK_NONE) {
@@ -188,7 +188,7 @@ bool isDrawGlobalObjectsBunnyHood(PlayState *play, Player *player) {
 
 extern BunnyEarKinematics sBunnyEarKinematics;
 
-BunnyEarKinematics sSavedBunnyEarKinematics;
+static BunnyEarKinematics sSavedBunnyEarKinematics;
 
 static void saveBunnyHoodKinematics(void) {
     sSavedBunnyEarKinematics = sBunnyEarKinematics;
@@ -355,9 +355,9 @@ static PlayState *sFunc80A6F9DCPlay;
 static PlayerMask sFunc80A6F9DCMask;
 
 RECOMP_HOOK("func_80A6F9DC") void allowPostmanTimer_on_func_80A6F9DC(Actor *thisx, PlayState *play) {
-    if (isBunnyHoodEnabledAndInInventory()) {
-        Player *player = GET_PLAYER(play);
+    Player *player = GET_PLAYER(play);
 
+    if (isSpeedShouldBeAppliedToPlayer(play, player)) {
         sFunc80A6F9DCMask = player->currentMask;
         player->currentMask = PLAYER_MASK_BUNNY;
         sFunc80A6F9DCPlay = play;
@@ -369,6 +369,27 @@ RECOMP_HOOK("func_80A6F9DC") void allowPostmanTimer_on_func_80A6F9DC(Actor *this
 RECOMP_HOOK_RETURN("func_80A6F9DC") void allowPostmanTimer_on_return_func_80A6F9DC(void) {
     if (sFunc80A6F9DCPlay) {
         GET_PLAYER(sFunc80A6F9DCPlay)->currentMask = sFunc80A6F9DCMask;
+    }
+}
+
+static PlayState *sFunc80A6FBFCPlay;
+static PlayerMask sFunc80A6FBFCMask;
+
+RECOMP_HOOK("func_80A6FBFC") void allowPostmanTimerSfx_on_func_80A6FBFC(Actor *thisx, PlayState *play) {
+    Player *player = GET_PLAYER(play);
+
+    if (isSpeedShouldBeAppliedToPlayer(play, player)) {
+        sFunc80A6FBFCMask = player->currentMask;
+        player->currentMask = PLAYER_MASK_BUNNY;
+        sFunc80A6FBFCPlay = play;
+    } else {
+        sFunc80A6FBFCPlay = NULL;
+    }
+}
+
+RECOMP_HOOK_RETURN("func_80A6FBFC") void allowPostmanTimerSfx_on_return_func_80A6FBFC(void) {
+    if (sFunc80A6FBFCPlay) {
+        GET_PLAYER(sFunc80A6FBFCPlay)->currentMask = sFunc80A6FBFCMask;
     }
 }
 
@@ -398,6 +419,96 @@ RECOMP_HOOK("KaleidoScope_UpdateMaskCursor") void handleBunnyHoodEquip_on_Kaleid
         s16 sfxId = sIsBunnyHoodEnabled ? NA_SE_SY_DECIDE : NA_SE_SY_CANCEL;
 
         Audio_PlaySfx(sfxId);
+    }
+}
+
+#define MASK_GRID_CELL_WIDTH 32
+#define MASK_GRID_CELL_HEIGHT 32
+#define MASK_GRID_QUAD_MARGIN 2
+#define MASK_GRID_QUAD_WIDTH (MASK_GRID_CELL_WIDTH - (2 * MASK_GRID_QUAD_MARGIN))
+#define MASK_GRID_QUAD_HEIGHT (MASK_GRID_CELL_HEIGHT - (2 * MASK_GRID_QUAD_MARGIN))
+#define MASK_GRID_SELECTED_QUAD_MARGIN (-2)
+#define MASK_GRID_SELECTED_QUAD_WIDTH (MASK_GRID_QUAD_WIDTH - (2 * MASK_GRID_SELECTED_QUAD_MARGIN))
+#define MASK_GRID_SELECTED_QUAD_HEIGHT (MASK_GRID_QUAD_HEIGHT - (2 * MASK_GRID_SELECTED_QUAD_MARGIN))
+#define MASK_GRID_SELECTED_QUAD_TEX_SIZE 32 // both width and height
+
+// based on DrawEquipSquare from BetterBunnyHood
+RECOMP_HOOK("KaleidoScope_DrawMaskSelect") void drawEquipSquare_on_KaleidoScope_DrawMaskSelect(PlayState *play) {
+    if (isBunnyHoodEnabledAndInInventory()) {
+        PauseContext *pauseCtx = &play->pauseCtx;
+
+        if (pauseCtx->state == PAUSE_STATE_MAIN) {
+            OPEN_DISPS(play->state.gfxCtx);
+
+            Gfx_SetupDL42_Opa(play->state.gfxCtx);
+
+            Vtx *masksVtx = GRAPH_ALLOC(play->state.gfxCtx, (4 * 4) * sizeof(Vtx));
+
+            s16 slot = SLOT_MASK_BUNNY - ITEM_NUM_SLOTS;
+            s16 slotX = slot % MASK_GRID_COLS;
+            s16 slotY = slot / MASK_GRID_COLS;
+            s16 initialX = 0 - (MASK_GRID_COLS * MASK_GRID_CELL_WIDTH) / 2;
+            s16 initialY = (MASK_GRID_ROWS * MASK_GRID_CELL_HEIGHT) / 2 - 6;
+            s16 vtxX = (initialX + (slotX * MASK_GRID_CELL_WIDTH)) + MASK_GRID_QUAD_MARGIN;
+            s16 vtxY = (initialY - (slotY * MASK_GRID_CELL_HEIGHT)) + pauseCtx->offsetY - MASK_GRID_QUAD_MARGIN;
+
+            s16 gridSelectedQuadMargin = -2;
+
+            // slightly enlarges the square if the bunny hood is on a C button
+            // otherwise, the white square would completely cover this mod's square
+            for (int i = 0; i < 3; i++) {
+                if (GET_CUR_FORM_BTN_ITEM(i + 1) == ITEM_MASK_BUNNY) {
+                    if (GET_CUR_FORM_BTN_SLOT(i + 1) >= ITEM_NUM_SLOTS) {
+                        gridSelectedQuadMargin = -4;
+                    }
+                }
+            }
+
+            s16 gridSelectedQuadWidth = (MASK_GRID_QUAD_WIDTH - (2 * gridSelectedQuadMargin));
+            s16 gridSelectedQuadHeight = (MASK_GRID_QUAD_HEIGHT - (2 * gridSelectedQuadMargin));
+
+            masksVtx[0].v.ob[0] = masksVtx[2].v.ob[0] =
+                vtxX + gridSelectedQuadMargin;
+            masksVtx[1].v.ob[0] = masksVtx[3].v.ob[0] =
+                masksVtx[0].v.ob[0] + gridSelectedQuadWidth;
+            masksVtx[0].v.ob[1] = masksVtx[1].v.ob[1] =
+                vtxY - gridSelectedQuadMargin;
+
+            masksVtx[2].v.ob[1] = masksVtx[3].v.ob[1] =
+                masksVtx[0].v.ob[1] - gridSelectedQuadHeight;
+
+            masksVtx[0].v.ob[2] = masksVtx[1].v.ob[2] =
+                masksVtx[2].v.ob[2] = masksVtx[3].v.ob[2] = 0;
+
+            masksVtx[0].v.flag = masksVtx[1].v.flag = masksVtx[2].v.flag =
+                masksVtx[3].v.flag = 0;
+
+            masksVtx[0].v.tc[0] = masksVtx[0].v.tc[1] =
+                masksVtx[1].v.tc[1] = masksVtx[2].v.tc[0] = 0;
+
+            masksVtx[1].v.tc[0] = masksVtx[2].v.tc[1] =
+                masksVtx[3].v.tc[0] = masksVtx[3].v.tc[1] =
+                    MASK_GRID_SELECTED_QUAD_TEX_SIZE * (1 << 5);
+
+            masksVtx[0].v.cn[0] = masksVtx[1].v.cn[0] =
+                masksVtx[2].v.cn[0] = masksVtx[3].v.cn[0] =
+                    masksVtx[0].v.cn[1] = masksVtx[1].v.cn[1] =
+                        masksVtx[2].v.cn[1] = masksVtx[3].v.cn[1] =
+                            masksVtx[0].v.cn[2] = masksVtx[1].v.cn[2] =
+                                masksVtx[2].v.cn[2] = masksVtx[3].v.cn[2] = 255;
+
+            masksVtx[0].v.cn[3] = masksVtx[1].v.cn[3] =
+                masksVtx[2].v.cn[3] = masksVtx[3].v.cn[3] = pauseCtx->alpha;
+
+            extern u8 gEquippedItemOutlineTex[];
+
+            gDPSetCombineMode(POLY_OPA_DISP++, G_CC_MODULATEIA_PRIM, G_CC_MODULATEIA_PRIM);
+            gDPSetPrimColor(POLY_OPA_DISP++, 0, 0, 100, 200, 255, 255);
+            gSPVertex(POLY_OPA_DISP++, masksVtx, 4, 0);
+            POLY_OPA_DISP = Gfx_DrawTexQuadIA8(POLY_OPA_DISP, gEquippedItemOutlineTex, 32, 32, 0);
+            gDPPipeSync(POLY_OPA_DISP++);
+            CLOSE_DISPS(play->state.gfxCtx);
+        }
     }
 }
 
