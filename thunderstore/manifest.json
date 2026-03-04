@@ -1,0 +1,9 @@
+{
+    "name": "Bunny_Hood_Tweaks",
+    "version_number": "0.1.0",
+    "website_url": "https://github.com/YAZ64MT/BunnyHoodTweaks",
+    "description": "Bunny hood enhancements. Keep your speed (and more)!",
+    "dependencies": [
+        "YAZMT-Global_Objects-0.1.1"
+    ]
+}

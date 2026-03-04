@@ -11,3 +11,5 @@
 patches.map
 build/
 .vscode/settings.json
+*.zip
+*.nrm

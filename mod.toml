@@ -5,27 +5,34 @@
 
 # Unique ID of this mod. Pick something long enough that it'll never be the same as any other mod.
 # The name displayed in the mod management menu is separate from this so this doesn't need to be human readable.
-id = "mm_recomp_mod_template"
+id = "yazmt_mm_bunnyhoodtweaks"
 
 # Version of this mod.
-version = "1.0.0"
+version = "0.1.0"
 
 # The name that will show up for this mod in the mod menu. This should be human readable.
-display_name = "Always Spin Attack"
+display_name = "Bunny Hood Tweaks"
 
 # The description that will show up when this mod is displayed in the mod menu. This should be human readable.
-description =  """
-This is an example mod for Majora's Mask: Recompiled that can be used as a template for creating mods. \
-When this mod is enabled, you will always perform a quickspin when swinging your sword.
+description =  """\
+Features:
+    - Bunny hood no longer needs to be kept on C buttons to use it
+    - Keep speed boost while wearing other masks
+    - Apply speed boost while running forward and Z targetting
+    - Apply speed boost to non-human forms
+    - Draw bunny hood on non-human forms
+    - Allow bunny hood to be freely taken on and off while transformed
+    - Allow bunny hood to be toggled on and off in the pause menu
+    - Bunny ears are no longer completely stiff while standing still
 
-For more details, see https://github.com/Zelda64Recomp/MMRecompModTemplate."""
+See the configuration menu to adjust many of these features."""
 
 # A short description that will show up in this mod's entry in the mod list. This should be human readable and kept short
 # to prevent it from being cut off due to the limited space.
-short_description = "Always perform a quickspin when swinging your sword."
+short_description = "Bunny hood enhancements."
 
 # Authors of this mod.
-authors = [ "Your name here" ]
+authors = [ "Neirn" ]
 
 # ID of the target recomp game.
 game_id = "mm"
@@ -37,6 +44,7 @@ minimum_recomp_version = "1.2.2"
 dependencies = [
 # Example dependency:
 #    "modname:1.0.0"
+    "yazmt_mm_global_objects:0.1.1",
 ]
 
 # Optional dependency mods. This has the same format as `dependencies`, but the game will still start if dependencies in this
@@ -59,38 +67,87 @@ native_libraries = [
 elf_path = "build/mod.elf"
 
 # Output mod filename.
-mod_filename = "mm_recomp_mod_template"
+mod_filename = "yazmt_mm_bunnyhoodtweaks"
 
 # Reference symbol files.
 func_reference_syms_file = "Zelda64RecompSyms/mm.us.rev1.syms.toml"
 data_reference_syms_files = [ "Zelda64RecompSyms/mm.us.rev1.datasyms.toml", "Zelda64RecompSyms/mm.us.rev1.datasyms_static.toml" ]
 
 # Additional files to include in the mod.
-additional_files = [ ]
+additional_files = [ "thumb.dds" ]
 
 [[manifest.config_options]]
-id = "enum_option"
-name = "Enum Option"
-description = "Test enum config option"
+id = "is_vanilla_behavior"
+name = "Force Vanilla Behavior"
+description = """\
+Disables most features of this mod while enabled.
+
+Toggling this option will unequip the bunny hood.
+
+Will not affect "Edit Form Restrictions" option."""
 type = "Enum"
-options = [ "First", "Second" ]
-default = "First"
+options = [ "OFF", "ON" ]
+default = "OFF"
 
 [[manifest.config_options]]
-id = "number_option"
-name = "Number Option"
-description = "Test number config option."
-type = "Number"
-min = 0
-max = 10
-step = 0.1
-precision = 1
-percent = false
-default = 1
+id = "is_z_target_tweak_applied"
+name = "Z Target Tweaks"
+description = "Allow bunny hood speed to be applied while running forward and Z-targetting."
+type = "Enum"
+options = [ "OFF", "ON" ]
+default = "ON"
 
 [[manifest.config_options]]
-id = "string_option"
-name = "String Option"
-description = "Test string config option."
-type = "String"
-default = "Lorem Ipsum"
+id = "is_speed_applied_to_forms"
+name = "Apply Speed To Forms"
+description = """\
+Allow bunny hood speed to be applied to non-human forms.
+
+May allow you to reach unintended locations, so use at your own risk."""
+type = "Enum"
+options = [ "OFF", "ON" ]
+default = "ON"
+
+[[manifest.config_options]]
+id = "is_bunny_hood_drawn_on_forms"
+name = "Draw Bunny Hood on Other Forms"
+description = """\
+Draw bunny hood on non-human forms.
+
+Bunny hood is not drawn if "Apply Speed To Forms" is OFF."""
+type = "Enum"
+options = [ "OFF", "ON" ]
+default = "ON"
+
+[[manifest.config_options]]
+id = "is_item_restrictions_modified"
+name = "Edit Form Restrictions"
+description = """\
+Allow non-human forms to use the bunny hood with the C buttons.
+
+Applied on next game boot."""
+type = "Enum"
+options = [ "OFF", "ON" ]
+default = "ON"
+
+[[manifest.config_options]]
+id = "is_can_equip_from_kaleido"
+name = "Allow Equip On Pause Menu"
+description = """\
+Pressing A on the bunny hood in the pause menu will toggle it.
+
+Disables the description that appears when pressing A on it normally."""
+type = "Enum"
+options = [ "OFF", "ON" ]
+default = "ON"
+
+[[manifest.config_options]]
+id = "is_tweak_bunny_ear_physics"
+name = "Tweak Bunny Ear Physics"
+description = """\
+Bunny ear physics are based on player head position changes rather than overall speed.
+
+Bunny ears will move while doing animations initiated from a standstill (e.g. bottle swinging)."""
+type = "Enum"
+options = [ "OFF", "ON" ]
+default = "ON"
