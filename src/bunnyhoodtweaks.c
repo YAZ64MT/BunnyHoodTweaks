@@ -233,7 +233,10 @@ RECOMP_HOOK_RETURN("Player_UpdateBunnyEars") void useHeadSpeed_on_return_Player_
     }
 }
 
-RECOMP_HOOK("Player_Update") void removeBunnyHood_on_Player_Update(Player *this, PlayState *play) {
+static Player *sPlayerUpdatePlayer;
+static PlayState *sPlayerUpdatePlay;
+
+RECOMP_HOOK("Player_Update") void updateBunnyHood_on_Player_Update(Player *this, PlayState *play) {
     if (sIsVanillaBehavior) {
         return;
     }
@@ -244,13 +247,21 @@ RECOMP_HOOK("Player_Update") void removeBunnyHood_on_Player_Update(Player *this,
         }
     }
 
-    BunnyHoodTweaksData *tweakData = getBunnyHoodTweaksData(this);
+    sPlayerUpdatePlayer = this;
+    sPlayerUpdatePlay = play;
+}
 
-    if (tweakData) {
-        tweakData->isBunnyHoodDrawn = isDrawGlobalObjectsBunnyHood(play, this);
+RECOMP_HOOK_RETURN("Player_Update") void updateBunnyHood_on_return_Player_Update(void) {
+    // we do this in a return hook to make sure we have the most up to date player data
+    if (sPlayerUpdatePlayer) {
+        Player *player = sPlayerUpdatePlayer;
+        PlayState *play = sPlayerUpdatePlay;
+
+        BunnyHoodTweaksData *tweakData = getBunnyHoodTweaksData(player);
+        tweakData->isBunnyHoodDrawn = isDrawGlobalObjectsBunnyHood(play, player);
 
         if (tweakData->isBunnyHoodDrawn) {
-            Player_UpdateBunnyEars(this);
+            Player_UpdateBunnyEars(player);            
         }
     }
 }

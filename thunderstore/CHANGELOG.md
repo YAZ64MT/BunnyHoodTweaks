@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.2.1
+* Fixed issue where mask would appear out of place for 1 frame
+  when switching from bunny hood to another mask
+
 ### 0.2.0
 * A border is now drawn around the bunny hood in the pause menu when equipped
 * Postman timer SFX is now correctly handled

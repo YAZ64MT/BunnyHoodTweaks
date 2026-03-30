@@ -18,7 +18,7 @@ This mod disables the game's default bunny hood implementation, so mods that add
 
 ```toml
 optional_dependencies = [
-    "yazmt_mm_bunnyhoodtweaks:0.1.0"
+    "yazmt_mm_bunnyhoodtweaks:0.2.1"
 ]
 ```
 

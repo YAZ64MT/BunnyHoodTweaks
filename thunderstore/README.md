@@ -22,7 +22,7 @@ that is intended to be used with the optional dependency system.
 
 ```toml
 optional_dependencies = [
-    "yazmt_mm_bunnyhoodtweaks:0.1.0"
+    "yazmt_mm_bunnyhoodtweaks:0.2.1"
 ]
 ```
 
