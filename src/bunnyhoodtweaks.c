@@ -579,3 +579,12 @@ RECOMP_CALLBACK("*", recomp_on_init) void registerActorExtensions(void) {
 RECOMP_EXPORT bool BunnyHoodTweaks_isPlayerRunSpeedModified(PlayState *play, Player *player) {
     return isSpeedShouldBeAppliedToPlayer(play, player);
 }
+
+RECOMP_EXPORT bool BunnyHoodTweaks_isBunnyHoodDrawn(PlayState *play, Player *player) {
+    BunnyHoodTweaksData *tweakData = getBunnyHoodTweaksData(player);
+    if (tweakData) {
+        return tweakData->isBunnyHoodDrawn;
+    }
+
+    return false;
+}
