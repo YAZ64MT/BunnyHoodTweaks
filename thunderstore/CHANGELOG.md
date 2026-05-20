@@ -1,5 +1,10 @@
 # Changelog
 
+### 0.3.0
+* Added option to disable most NPC reactions to the bunny hood
+* Added BunnyHoodTweaks_isBunnyHoodDrawn export
+* Fixed tweaked physics behavior when riding Epona
+
 ### 0.2.1
 * Fixed issue where mask would appear out of place for 1 frame
   when switching from bunny hood to another mask
