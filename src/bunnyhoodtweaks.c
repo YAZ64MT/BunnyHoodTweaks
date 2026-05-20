@@ -29,6 +29,7 @@ static bool sIsBunnyHoodDrawnOnForms;
 static bool sIsVanillaBehavior;
 static bool sIsEquipAllowedOnKaleido;
 static bool sIsTweakedPhysics;
+static bool sIsNpcReactionDisabled;
 
 static int sPlayerAction13Level;
 static int sPlayerAction14Level;
@@ -327,6 +328,7 @@ RECOMP_HOOK("Play_Main") void updateOptions_on_Play_Main(PlayState *play) {
     sIsVanillaBehavior = recomp_get_config_u32("is_vanilla_behavior");
     sIsEquipAllowedOnKaleido = recomp_get_config_u32("is_can_equip_from_kaleido");
     sIsTweakedPhysics = recomp_get_config_u32("is_tweak_bunny_ear_physics");
+    sIsNpcReactionDisabled = recomp_get_config_u32("is_npc_reactions_disabled");
 
     bool isVanillaEnabledChanged = sIsVanillaBehavior != prevVanillaEnabled;
 
@@ -355,6 +357,16 @@ RECOMP_HOOK_RETURN("Sram_InitDebugSave") void disableBunnyHood_on_return_Sram_In
     sIsBunnyHoodEnabled = false;
 }
 
+static int sDisableFaceReactionCounter;
+
+RECOMP_HOOK("Text_GetFaceReaction") void setBunnyMask_on_Text_GetFaceReaction(PlayState *play, FaceReactionSet reactionSet) {
+    sDisableFaceReactionCounter++;
+}
+
+RECOMP_HOOK_RETURN("Text_GetFaceReaction") void setBunnyMask_on_return_Text_GetFaceReaction(void) {
+    sDisableFaceReactionCounter--;
+}
+
 static PlayState *sPlayerGetMaskPlay;
 
 RECOMP_HOOK("Player_GetMask") void setBunnyMask_on_Player_GetMask(PlayState *play) {
@@ -362,7 +374,10 @@ RECOMP_HOOK("Player_GetMask") void setBunnyMask_on_Player_GetMask(PlayState *pla
 
     if (player->currentMask == PLAYER_MASK_NONE && sIsBunnyHoodEnabled) {
         sPlayerGetMaskPlay = play;
-        player->currentMask = PLAYER_MASK_BUNNY;
+
+        if (sDisableFaceReactionCounter == 0 || !sIsNpcReactionDisabled) {
+            player->currentMask = PLAYER_MASK_BUNNY;
+        }
     } else {
         sPlayerGetMaskPlay = NULL;
     }

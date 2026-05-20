@@ -25,6 +25,7 @@ Features:
     - Allow bunny hood to be toggled on and off in the pause menu
     - Bunny ears are no longer completely stiff while standing still
     - Draws a border around bunny hood in the pause menu when enabled
+    - Disable NPC reactions
 
 See the configuration menu to adjust many of these features."""
 
@@ -149,6 +150,15 @@ description = """\
 Bunny ear physics are based on player head position changes rather than overall speed.
 
 Bunny ears will move while doing animations initiated from a standstill (e.g. bottle swinging)."""
+type = "Enum"
+options = [ "OFF", "ON" ]
+default = "ON"
+
+[[manifest.config_options]]
+id = "is_npc_reactions_disabled"
+name = "Disable NPC Reactions"
+description = """\
+Disable bunny hood reactions for various NPCs."""
 type = "Enum"
 options = [ "OFF", "ON" ]
 default = "ON"
