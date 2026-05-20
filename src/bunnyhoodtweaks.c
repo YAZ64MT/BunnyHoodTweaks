@@ -200,6 +200,8 @@ static void loadBunnyHoodKinematics(void) {
 
 static Player *sPlayerUpdateBunnyEarsPlayer;
 static f32 sPlayerUpdateBunnyEarsSpeed;
+static s16 sPlayerUpdateBunnyEarsShapeRotY;
+static s16 sPlayerUpdateBunnyEarsWorldRotY;
 
 RECOMP_HOOK("Player_UpdateBunnyEars") void useHeadSpeed_on_Player_UpdateBunnyEars(Player *player) {
     sPlayerUpdateBunnyEarsPlayer = NULL;
@@ -217,6 +219,14 @@ RECOMP_HOOK("Player_UpdateBunnyEars") void useHeadSpeed_on_Player_UpdateBunnyEar
             sBunnyEarKinematics = tweakData->kinematics;
 
             player->actor.speed = CLAMP_MAX(Math_Vec3f_DistXZ(&tweakData->curPos, &tweakData->prevPos), 8.8f);
+
+            sPlayerUpdateBunnyEarsShapeRotY = player->actor.shape.rot.y;
+            sPlayerUpdateBunnyEarsWorldRotY = player->actor.world.rot.y;
+
+            if (player->actor.parent) {
+                player->actor.shape.rot.y = player->actor.parent->shape.rot.y;
+                player->actor.world.rot.y = player->actor.parent->world.rot.y;
+            }
         }
     }
 }
@@ -228,6 +238,8 @@ RECOMP_HOOK_RETURN("Player_UpdateBunnyEars") void useHeadSpeed_on_return_Player_
         if (tweakData) {
             tweakData->kinematics = sBunnyEarKinematics;
             sPlayerUpdateBunnyEarsPlayer->actor.speed = sPlayerUpdateBunnyEarsSpeed;
+            sPlayerUpdateBunnyEarsPlayer->actor.shape.rot.y = sPlayerUpdateBunnyEarsShapeRotY;
+            sPlayerUpdateBunnyEarsPlayer->actor.world.rot.y = sPlayerUpdateBunnyEarsWorldRotY;
             loadBunnyHoodKinematics();
         }
     }
@@ -276,7 +288,7 @@ RECOMP_HOOK("Player_PostLimbDrawGameplay") void drawBunnyHood_on_Player_PostLimb
 
         if (tweakData) {
             tweakData->prevPos = tweakData->curPos;
-            tweakData->curPos = player->bodyPartsPos[PLAYER_BODYPART_HEAD];
+            Matrix_MultZero(&tweakData->curPos);
 
             if (*dList1 && tweakData->isBunnyHoodDrawn) {
                 void *bunnyHoodObj = GlobalObjects_getGlobalObject(OBJECT_MASK_RABIT);
